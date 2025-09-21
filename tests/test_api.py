@@ -3,7 +3,7 @@ import subprocess, time, requests, os, signal
 def test_health_and_predict():
     # Lancer l'API localement (uvicorn)
     proc = subprocess.Popen(["uvicorn", "api.main:app", "--port", "8001"])
-    time.sleep(1.5)
+    time.sleep(3.0)
 
     try:
         r = requests.get("http://127.0.0.1:8001/health")
