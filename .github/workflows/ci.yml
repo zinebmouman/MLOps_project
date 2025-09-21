@@ -19,10 +19,15 @@ jobs:
           pip install -r requirements.txt
       - name: Train & Evaluate
         run: |
-          make train
-          make eval
+          export PYTHONPATH=$GITHUB_WORKSPACE
+          python -m src.train
+          python -m src.evaluate
+
       - name: Run tests
-        run: make test
+        run: |
+          export PYTHONPATH=$GITHUB_WORKSPACE
+          pytest -q
+
       - name: Upload model artifact
         uses: actions/upload-artifact@v4
         with:
