@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write   # requis pour pousser sur GHCR
+      packages: write   
     steps:
       - uses: actions/checkout@v4
       - name: Download artefacts (models/)
@@ -54,3 +54,4 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/music-api:latest
             ghcr.io/${{ github.repository_owner }}/music-api:${{ github.ref_name }}
+
