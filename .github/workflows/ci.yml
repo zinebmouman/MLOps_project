@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, music-reco ]   # <- inclure ta branche si tu veux publier sans merger
+    branches: [ main, music-reco ]   # publier aussi depuis ta branche si besoin
   pull_request: {}
 
 jobs:
@@ -11,15 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - run: |
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Train (preprocess)
         env:
           PYTHONPATH: ${{ github.workspace }}
         run: python -m src.preprocess
-      - name: Upload artefacts
+      - name: Upload artefacts (models/)
         uses: actions/upload-artifact@v4
         with:
           name: music-model
@@ -30,10 +32,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write         # <-- indispensable pour GHCR
+      packages: write   # requis pour pousser sur GHCR
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - name: Download artefacts (models/)
+        uses: actions/download-artifact@v4
         with:
           name: music-model
           path: models
@@ -42,12 +45,12 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}   # <-- fourni par GitHub
-      - name: Build & Push
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & Push image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: |
             ghcr.io/${{ github.repository_owner }}/music-api:latest
-            ghcr.io/${{ github.repository_owner }}/music-api:${{ github.ref_name }}   # ex: music-reco
+            ghcr.io/${{ github.repository_owner }}/music-api:${{ github.ref_name }}
