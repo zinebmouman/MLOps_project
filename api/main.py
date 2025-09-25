@@ -38,3 +38,4 @@ def recommend(song: str = Query(..., min_length=1), top_n: int = 5):
 @app.get("/metrics")
 def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
