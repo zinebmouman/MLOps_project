@@ -1,28 +1,18 @@
-# === build stage: train the recommender ===
-FROM python:3.11-slim AS trainer
-WORKDIR /app
-
-# Déps
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Code + données
-COPY src ./src
-COPY data ./data
-
-# Entraînement (préprocessing TF-IDF)
-RUN python -m src.preprocess
-
-# === runtime stage: serve API ===
+# Dockerfile
 FROM python:3.11-slim
 WORKDIR /app
 
+# Dépendances Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Code API + librairie
 COPY api ./api
 COPY src ./src
-COPY --from=trainer /app/models ./models
+
+# ⬇️ Artefacts entraînés par la CI (download-artifact) — DOIT exister au build CI
+COPY models ./models
 
 EXPOSE 8000
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn","api.main:app","--host","0.0.0.0","--port","8000"]
+
