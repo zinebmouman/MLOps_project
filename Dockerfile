@@ -1,21 +1,22 @@
-# === build stage: train the model ===
+# === build stage: train the recommender ===
 FROM python:3.11-slim AS trainer
 WORKDIR /app
 
-# 1) Déps Python
+# Déps
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 2) Code
+# Code + données
 COPY src ./src
-ENV PYTHONPATH=/app
-# 3) Entraînement + évaluation (sans make)
-#   => appelle directement les modules Python
-RUN python -m src.train && python -m src.evaluate
+COPY data ./data
 
-# === runtime stage: serve API avec le modèle ===
+# Entraînement (préprocessing TF-IDF)
+RUN python -m src.preprocess
+
+# === runtime stage: serve API ===
 FROM python:3.11-slim
 WORKDIR /app
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
