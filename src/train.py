@@ -1,6 +1,5 @@
-# src/train.py
-import os, re, logging, joblib
 import pandas as pd
+import re, logging, joblib
 import nltk
 from pathlib import Path
 from nltk.corpus import stopwords
@@ -8,68 +7,67 @@ from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from src.utils import MODELS_DIR, set_seed, save_json
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data" / "spotify_millsongdata.csv"
+MODELS = ROOT / "models"
+MODELS.mkdir(parents=True, exist_ok=True)
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s - %(message)s'
+)
 
-DATA_PATH = Path("data/spotify_millsongdata.csv")
-SAMPLE_SIZE = int(os.getenv("SAMPLE_SIZE", "10000"))     # pour CI/build rapide
-MAX_FEATURES = int(os.getenv("MAX_FEATURES", "5000"))
+def ensure_nltk():
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except LookupError:
+        nltk.download('punkt')
+    try:
+        nltk.data.find('corpora/stopwords')
+    except LookupError:
+        nltk.download('stopwords')
 
-def preprocess_text(text, _stop):
-    text = re.sub(r"[^a-zA-Z\s]", " ", str(text)).lower()
-    tokens = word_tokenize(text)
-    tokens = [w for w in tokens if w not in _stop and len(w) > 1]
-    return " ".join(tokens)
+def preprocess_text_factory():
+    stop_words = set(stopwords.words('english'))
+    pat = re.compile(r"[^a-zA-Z\s]")
+    def _clean(text: str) -> str:
+        text = pat.sub("", str(text)).lower()
+        tokens = word_tokenize(text)
+        tokens = [w for w in tokens if w and w not in stop_words]
+        return " ".join(tokens)
+    return _clean
 
 if __name__ == "__main__":
-    set_seed(42)
+    logging.info("🚀 Starting preprocessing...")
+    ensure_nltk()
 
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(f"CSV not found at {DATA_PATH}. Place your dataset under data/.")
+    # Charger un échantillon raisonnable pour le build
+    df = pd.read_csv(DATA).sample(10000, random_state=42)
+    logging.info("✅ Dataset loaded: %d rows", len(df))
 
-    logging.info("Downloading NLTK data (punkt, stopwords) if needed...")
-    nltk.download('punkt')
-    nltk.download('stopwords')
+    # Retirer colonne 'link' si présente
+    df = df.drop(columns=['link'], errors='ignore').reset_index(drop=True)
 
-    logging.info("Loading dataset...")
-    df = pd.read_csv(DATA_PATH)
-    if "link" in df.columns:
-        df = df.drop(columns=["link"])
+    # Nettoyage
+    logging.info("🧹 Cleaning text...")
+    clean_fn = preprocess_text_factory()
+    df['cleaned_text'] = df['text'].map(clean_fn)
+    logging.info("✅ Text cleaned.")
 
-    if SAMPLE_SIZE > 0 and SAMPLE_SIZE < len(df):
-        df = df.sample(SAMPLE_SIZE, random_state=42).reset_index(drop=True)
-    else:
-        df = df.reset_index(drop=True)
+    # TF-IDF
+    logging.info("🔠 Vectorizing TF-IDF...")
+    tfidf = TfidfVectorizer(max_features=5000)
+    tfidf_matrix = tfidf.fit_transform(df['cleaned_text'])
+    logging.info("✅ TF-IDF shape: %s", tfidf_matrix.shape)
 
-    # Champs attendus: 'text', 'song', 'artist'
-    if "text" not in df.columns or "song" not in df.columns:
-        raise ValueError("CSV must contain at least 'text' and 'song' columns.")
-
-    stop_words = set(stopwords.words('english'))
-    logging.info("Cleaning text...")
-    df["cleaned_text"] = df["text"].astype(str).apply(lambda t: preprocess_text(t, stop_words))
-
-    logging.info("Vectorizing with TF-IDF...")
-    tfidf = TfidfVectorizer(max_features=MAX_FEATURES)
-    tfidf_matrix = tfidf.fit_transform(df["cleaned_text"])
-
-    logging.info("Computing cosine similarity...")
+    # Similarités cosinus
+    logging.info("📐 Computing cosine similarity...")
     cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    joblib.dump(df, MODELS_DIR / "df_cleaned.pkl")
-    joblib.dump(tfidf_matrix, MODELS_DIR / "tfidf_matrix.pkl")
-    joblib.dump(cosine_sim, MODELS_DIR / "cosine_sim.pkl")
-    joblib.dump(tfidf, MODELS_DIR / "tfidf_vectorizer.pkl")  # utile si tu veux inférer sur nouveau texte
+    # Sauvegarde des artefacts dans /models
+    joblib.dump(df[['artist','song','cleaned_text']], MODELS / 'df_cleaned.pkl')
+    joblib.dump(tfidf,                         MODELS / 'tfidf_vectorizer.pkl')
+    joblib.dump(cosine_sim,                   MODELS / 'cosine_sim.pkl')
 
-    save_json(
-        {
-            "rows": int(len(df)),
-            "max_features": int(MAX_FEATURES),
-            "sample_size": int(SAMPLE_SIZE),
-        },
-        MODELS_DIR / "metrics.json",
-    )
-
-    logging.info("Saved artefacts in %s", MODELS_DIR)
+    logging.info("💾 Saved: df_cleaned.pkl, tfidf_vectorizer.pkl, cosine_sim.pkl")
+    logging.info("✅ Preprocessing complete.")
