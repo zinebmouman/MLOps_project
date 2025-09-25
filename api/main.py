@@ -1,26 +1,39 @@
-from fastapi import FastAPI
-from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi import FastAPI, Query
 from fastapi.responses import Response
-from src.schema import PredictRequest, PredictResponse
-from src.inference import predict_one, load_model
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from src.recommendation import recommend_songs
 
-app = FastAPI(title="Iris ML API", version="1.0.0")
+app = FastAPI(title="Music Recommender API", version="1.0.0")
 
 REQ_COUNTER = Counter("requests_total", "Total requests", ["endpoint"])
-PRED_LAT = Histogram("predict_latency_seconds", "Latency for /predict")
+RECO_LAT = Histogram("recommend_latency_seconds", "Latency for /recommend")
+
+@app.get("/")
+def root():
+    REQ_COUNTER.labels("/").inc()
+    return {"message": "Music Recommender is running. See /docs, /health, /metrics."}
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)
 
 @app.get("/health")
 def health():
-    load_model()
     REQ_COUNTER.labels("/health").inc()
     return {"status": "ok"}
 
-@app.post("/predict", response_model=PredictResponse)
-@PRED_LAT.time()
-def predict(body: PredictRequest):
-    REQ_COUNTER.labels("/predict").inc()
-    label, proba = predict_one(body.as_list())
-    return PredictResponse(label=label, proba=proba)
+@app.get("/recommend")
+@RECO_LAT.time()
+def recommend(song: str = Query(..., min_length=1), top_n: int = 5):
+    REQ_COUNTER.labels("/recommend").inc()
+    res = recommend_songs(song, top_n=top_n)
+    if res is None:
+        return {"song": song, "found": False, "recommendations": []}
+    return {
+        "song": song,
+        "found": True,
+        "recommendations": res.to_dict(orient="records")
+    }
 
 @app.get("/metrics")
 def metrics():
