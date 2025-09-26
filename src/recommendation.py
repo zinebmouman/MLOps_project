@@ -30,3 +30,22 @@ def recommend_songs(song_name: str, top_n: int = 5) -> pd.DataFrame | None:
     out.index = out.index + 1
     out.index.name = "rank"
     return out
+
+# ... (imports et code existant)
+
+def get_songs(limit: int | None = None) -> list[str]:
+    df, _ = _load()
+    songs = pd.Series(df["song"]).dropna().astype(str).unique().tolist()
+    if limit:
+        return songs[:limit]
+    return songs
+
+def search_songs(prefix: str, limit: int = 20) -> list[str]:
+    df, _ = _load()
+    p = prefix.lower()
+    # simple filtre (startswith + contient)
+    s = df["song"].dropna().astype(str)
+    out = s[s.str.lower().str.startswith(p) | s.str.lower().str.contains(p)] \
+            .drop_duplicates().head(limit).tolist()
+    return out
+
