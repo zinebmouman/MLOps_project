@@ -1,13 +1,13 @@
 import joblib
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Any, List
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 MODELS = ROOT / "models"
 
 _df: Optional[pd.DataFrame] = None
-_cos: Optional[any] = None
+_cos: Optional[Any] = None
 
 def _load():
     global _df, _cos
@@ -16,6 +16,15 @@ def _load():
     if _cos is None:
         _cos = joblib.load(MODELS / 'cosine_sim.pkl')
     return _df, _cos
+
+def list_songs(q: str = "", limit: int = 300) -> List[str]:
+    df, _ = _load()
+    s = df['song'].dropna().astype(str)
+    if q:
+        ql = q.lower()
+        s = s[s.str.lower().str.contains(ql)]
+    unique = pd.unique(s)
+    return sorted(unique)[:limit]
 
 def recommend_songs(song_name: str, top_n: int = 5) -> pd.DataFrame | None:
     df, cosine_sim = _load()
@@ -29,23 +38,4 @@ def recommend_songs(song_name: str, top_n: int = 5) -> pd.DataFrame | None:
     out = df[['artist','song']].iloc[song_indices].reset_index(drop=True)
     out.index = out.index + 1
     out.index.name = "rank"
-    return out
-
-# ... (imports et code existant)
-
-def get_songs(limit: int | None = None) -> list[str]:
-    df, _ = _load()
-    songs = pd.Series(df["song"]).dropna().astype(str).unique().tolist()
-    if limit:
-        return songs[:limit]
-    return songs
-
-def search_songs(prefix: str, limit: int = 20) -> list[str]:
-    df, _ = _load()
-    p = prefix.lower()
-    # simple filtre (startswith + contient)
-    s = df["song"].dropna().astype(str)
-    out = s[s.str.lower().str.startswith(p) | s.str.lower().str.contains(p)] \
-            .drop_duplicates().head(limit).tolist()
-    return out
-
+    return out  # <-- important
