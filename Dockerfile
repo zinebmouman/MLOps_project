@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
+# Les modèles sont fournis par le job CI via download-artifact
 COPY api ./api
 COPY src ./src
 # Les modèles sont fournis par le job CI via download-artifact
