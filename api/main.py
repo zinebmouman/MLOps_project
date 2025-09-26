@@ -1,6 +1,11 @@
 from fastapi import FastAPI, Query
 from fastapi.responses import Response, RedirectResponse, JSONResponse
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from src.recommendation import recommend_songs, get_songs, search_songs   # <---
+
+from fastapi import FastAPI, Query
+from fastapi.responses import Response, RedirectResponse, JSONResponse
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from src.recommendation import recommend_songs
 from pathlib import Path
 import os
@@ -13,6 +18,12 @@ RECO_LAT = Histogram("recommend_latency_seconds", "Latency for /recommend")
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", None)
 MLFLOW_UI_URL       = os.getenv("MLFLOW_UI_URL", None)  # ex: http://localhost:5000 ou http://mlflow:5000
 
+@app.get("/songs")
+def songs(limit: int = 5000, q: str | None = None):
+    """Liste de chansons (pour l'UI) ou suggestions par préfixe q."""
+    if q:
+        return {"items": search_songs(q, limit=limit)}
+    return {"items": get_songs(limit=limit)}
 @app.get("/")
 def root():
     REQ_COUNTER.labels("/").inc()
