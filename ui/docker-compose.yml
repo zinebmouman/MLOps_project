@@ -1,20 +1,21 @@
 services:
   api:
-    image: ghcr.io/zinebmouman/music-api:latest   # pas de build !
+    image: ghcr.io/zinebmouman/music-api:latest   # ⬅️ on PULL l'image, pas de build
     pull_policy: always
     container_name: music-api
+    environment:
+      - UI_ORIGIN=http://localhost:8501
     ports:
       - "8000:8000"
 
   ui:
     build:
-      context: ./ui
+      context: .                # ⬅️ le compose est dans le dossier ui/, donc "." = ui/
       dockerfile: Dockerfile.ui
     container_name: music-ui
     environment:
-      - API_URL=http://api:8000
+      - API_URL=http://api:8000 # la UI parle au service "api" via le réseau compose
     ports:
       - "8501:8501"
     depends_on:
       - api
-
