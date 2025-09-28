@@ -1,23 +1,19 @@
 version: "3.9"
 services:
   api:
-    # si tu veux reconstruire localement :
-    build: .
-    # sinon, pour utiliser l'image publiée sur GHCR :
-    # image: ghcr.io/zinebmouman/music-api:latest
+    image: ghcr.io/zinebmouman/music-api:latest
+    container_name: music-api
     ports:
       - "8000:8000"
-    environment:
-      - UI_ORIGIN=http://localhost:8501
-      # - MLFLOW_UI_URL=http://localhost:5000   # si tu as une UI MLflow à part
 
   ui:
     build:
-      context: .
+      context: ./ui
       dockerfile: Dockerfile.ui
+    container_name: music-ui
+    environment:
+      - API_URL=http://api:8000   # UI parle au service "api" via le réseau compose
     ports:
       - "8501:8501"
-    environment:
-      - API_URL=http://api:8000
     depends_on:
       - api
