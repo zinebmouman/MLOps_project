@@ -1,14 +1,15 @@
 FROM python:3.11-slim
 WORKDIR /app
 
-# les chemins sont relatifs au CONTEXTE (ui/)
+# Ces fichiers sont dans le CONTEXTE (ui/)
 COPY requirements-ui.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY app.py /app/app.py
 
-# par défaut on pointe vers l'API locale mappée par compose
+# Par défaut, en local, la UI peut parler à l'API publiée sur l'hôte
 ENV API_URL=http://host.docker.internal:8000
 
 EXPOSE 8501
 CMD ["streamlit","run","/app/app.py","--server.address","0.0.0.0","--server.port","8501"]
+
