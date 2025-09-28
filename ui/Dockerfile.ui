@@ -1,11 +1,15 @@
 FROM python:3.11-slim
 WORKDIR /app
 
+# 1) Déps UI (le fichier est dans ui/)
 COPY requirements-ui.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
+# 2) Code UI (le fichier est dans ui/)
 COPY app.py /app/app.py
 
+# 3) Par défaut en local, la UI parle à l’API sur l’hôte
 ENV API_URL=http://host.docker.internal:8000
+
 EXPOSE 8501
 CMD ["streamlit","run","/app/app.py","--server.address","0.0.0.0","--server.port","8501"]
