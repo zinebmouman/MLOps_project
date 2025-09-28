@@ -1,13 +1,13 @@
 FROM python:3.11-slim
 WORKDIR /app
 
-# Chemins relatifs au CONTEXTE (ui/)
+# les chemins sont relatifs au CONTEXTE (ui/)
 COPY requirements-ui.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY app.py /app/app.py
 
-# En local Windows: host.docker.internal = machine hôte (où tourne l'API mappée sur 8000)
+# par défaut on pointe vers l'API locale mappée par compose
 ENV API_URL=http://host.docker.internal:8000
 
 EXPOSE 8501
