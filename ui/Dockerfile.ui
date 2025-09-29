@@ -1,15 +1,15 @@
+# ui/Dockerfile.ui
 FROM python:3.11-slim
 WORKDIR /app
 
-# 1) Déps UI (le fichier est dans ui/)
-COPY requirements-ui.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# On copie TOUT le dossier ui/ dans /app (app.py, requirements-ui.txt, etc.)
+COPY . /app
 
-# 2) Code UI (le fichier est dans ui/)
-COPY app.py /app/app.py
+# Installe les dépendances UI
+RUN pip install --no-cache-dir -r requirements-ui.txt
 
-# 3) Par défaut en local, la UI parle à l’API sur l’hôte
-ENV API_URL=http://host.docker.internal:8000
+# Par défaut en local, parler à l'API publiée via Compose
+ENV API_URL=http://api:8000
 
 EXPOSE 8501
-CMD ["streamlit","run","/app/app.py","--server.address","0.0.0.0","--server.port","8501"]
+CMD ["streamlit","run","app.py","--server.address","0.0.0.0","--server.port","8501"]
