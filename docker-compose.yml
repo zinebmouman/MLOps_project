@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/zinebmouman/music-api:latest
+    image: ./backend
     environment:
       - UI_ORIGIN=http://localhost:8501
     ports:
@@ -8,7 +8,7 @@ services:
 
   ui:
     build:
-      context: ghcr.io/zinebmouman/music-ui:latest            # <<< IMPORTANT
+      context: ./ui           # <<< IMPORTANT
       dockerfile: Dockerfile.ui  # dans ./ui
     environment:
       - API_URL=http://api:8000
