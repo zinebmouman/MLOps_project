@@ -1,8 +1,6 @@
 services:
   api:
     image: ghcr.io/zinebmouman/music-api:latest
-    pull_policy: always
-    container_name: music-api
     environment:
       - UI_ORIGIN=http://localhost:8501
     ports:
@@ -10,9 +8,8 @@ services:
 
   ui:
     build:
-      context: .
-      dockerfile: Dockerfile.ui
-    container_name: music-ui
+      context: ghcr.io/zinebmouman/music-ui:latest            # <<< IMPORTANT
+      dockerfile: Dockerfile.ui  # dans ./ui
     environment:
       - API_URL=http://api:8000
     ports:
