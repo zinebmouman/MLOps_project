@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [ main, music-reco, ui-streamlit ]   # <- inclure ta branche
+    branches: [ main, music-reco, ui-streamlit ]
     paths:
-      - 'backend/**'          # <- tout le backend déplacé ici
-      - 'ui/**'               # <- la UI
+      - 'backend/**'
+      - 'ui/**'
       - '.github/workflows/**'
   workflow_dispatch: {}
   schedule:
@@ -18,7 +18,6 @@ defaults:
 jobs:
   train_and_test:
     runs-on: ubuntu-latest
-    # On travaille DANS backend, donc toutes les commandes et chemins sont simples
     defaults:
       run:
         working-directory: backend
@@ -27,7 +26,6 @@ jobs:
       TFIDF_MAX_FEATURES: 5000
       SAMPLE_SIZE: 10000
       DATA_PATH: data/spotify_millsongdata.csv
-      # on garde les runs MLflow au root du repo
       MLFLOW_TRACKING_URI: file:${{ github.workspace }}/mlruns
       MLFLOW_EXPERIMENT_NAME: music-reco
       GITHUB_SHA: ${{ github.sha }}
@@ -72,7 +70,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # IMPORTANT : on place les modèles dans backend/models
       - name: Download artefacts (models/)
         uses: actions/download-artifact@v4
         with:
@@ -115,9 +112,53 @@ jobs:
       - name: Build & Push UI image
         uses: docker/build-push-action@v6
         with:
-          context: .                 # <--- au lieu de ./ui
+          context: ui              # <--- plus propre que "."
           file: ui/Dockerfile.ui 
           push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/music-ui:latest
+            ghcr.io/${{ github.repository_owner }}/music-ui:${{ github.ref_name }}
+            ghcr.io/${{ github.repository_owner }}/music-ui:${{ github.sha }}
+
+  compose_smoke_test:
+    needs: [build_and_push_image, build_and_push_ui]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare Compose file (pin SHA tags)
+        run: |
+          sed -e "s/:latest/:${{ github.sha }}/g" docker-compose.ghcr.yml > docker-compose.ci.yml
+
+      - name: Up with Compose
+        run: |
+          docker compose -f docker-compose.ci.yml up -d
+          # wait API
+          for i in {1..60}; do curl -fsS http://localhost:8000/health && break; sleep 2; done
+          # quick API checks
+          curl -fsS "http://localhost:8000/version" || true
+          curl -fsS "http://localhost:8000/songs?q=love&limit=2" || true
+          # wait UI
+          for i in {1..60}; do curl -fsS http://localhost:8501/ && break; sleep 2; done
+
+      - name: Logs on failure
+        if: failure()
+        run: |
+          docker compose -f docker-compose.ci.yml ps
+          docker logs music-api || true
+          docker logs music-ui || true
+
+      - name: Down
+        if: always()
+        run: docker compose -f docker-compose.ci.yml down -v
+
           tags: |
             ghcr.io/${{ github.repository_owner }}/music-ui:latest
             ghcr.io/${{ github.repository_owner }}/music-ui:${{ github.ref_name }}
