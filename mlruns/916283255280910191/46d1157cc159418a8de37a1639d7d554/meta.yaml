@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/moi/Desktop/github/MLOps-DevOps-Project/MLOps_project-sa-branch/mlruns/916283255280910191/46d1157cc159418a8de37a1639d7d554/artifacts
+end_time: 1759337910058
+entry_point_name: ''
+experiment_id: '916283255280910191'
+lifecycle_stage: active
+run_id: 46d1157cc159418a8de37a1639d7d554
+run_name: preprocess-tfidf-cosine
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759337877046
+status: 3
+tags: []
+user_id: moi

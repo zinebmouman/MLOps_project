@@ -1,0 +1,27 @@
+# Environnements virtuels
+venv/
+.env/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Artefacts du modèle
+models/
+*.pkl
+*.joblib
+
+# Logs
+*.log
+
+# VS Code
+.vscode/
+
+# Jupyter Notebooks checkpoints
+.ipynb_checkpoints/
+
+# Docker
+*.pid
