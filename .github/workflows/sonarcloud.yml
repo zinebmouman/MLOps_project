@@ -28,7 +28,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
         with: 
-          python-version: "3.11"
+        python-version: "3.11"
 
     - name: Install dependencies
       run: |
@@ -71,8 +71,8 @@ EOF
       with:
         # ⚠️ REMPLACEZ avec vos vraies clés SonarCloud !
         args: >
-          -Dsonar.organization=linka2002
-          -Dsonar.projectKey=linka2002_music-recommendation
+          -Dsonar.organization=zinebmouman
+          -Dsonar.projectKey=zinebmouman_MLOps_project
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.python.coverage.reportPaths=coverage.xml
           -Dsonar.python.security.reportPaths=security-report.json
