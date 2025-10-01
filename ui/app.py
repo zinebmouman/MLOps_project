@@ -1,4 +1,7 @@
-import os, requests, pandas as pd, streamlit as st
+import os
+import requests
+import pandas as pd
+import streamlit as st
 
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
@@ -7,17 +10,13 @@ st.title("🎶 Instant Music Recommender")
 
 @st.cache_data(ttl=300)
 def fetch_songs(q: str) -> list[str]:
+    """Appelé uniquement si l'utilisateur clique sur 'Search suggestions'."""
     try:
         r = requests.get(f"{API_URL}/songs", params={"q": q, "limit": 1000}, timeout=20)
         r.raise_for_status()
         return r.json().get("items", [])
     except Exception:
         return []
-
-# Le select reprend le look de ta capture : un champ de recherche puis la liste
-q = st.text_input("🎵 Select a song:", value="love")
-options = fetch_songs(q) if q else []
-selected = st.selectbox("", options, index=0 if options else None, label_visibility="collapsed")
 
 def recommend(song: str, k: int = 5) -> pd.DataFrame | None:
     r = requests.get(f"{API_URL}/recommend", params={"song": song, "top_n": k}, timeout=30)
@@ -27,14 +26,39 @@ def recommend(song: str, k: int = 5) -> pd.DataFrame | None:
         return None
     return pd.DataFrame(js["recommendations"])
 
+# ---- UI ----
+q = st.text_input("🎵 Type a song title", value="", placeholder="Type at least 2 letters")
+
+# Ne FETCH RIEN au chargement : seulement si on clique le bouton
+suggestions = []
+if st.button("🔎 Search suggestions"):
+    q_clean = q.strip()
+    if len(q_clean) < 2:
+        st.info("Type at least 2 characters, then click Search.")
+    else:
+        with st.spinner("Searching suggestions…"):
+            suggestions = fetch_songs(q_clean)
+            if not suggestions:
+                st.warning("No suggestions found. You can still request recommendations with the typed title.")
+
+selected = None
+if suggestions:
+    selected = st.selectbox("Suggestions (optional)", suggestions, index=0)
+
+# Quand on recommande, on n'appelle PAS /songs : on prend la sélection OU le texte saisi
+song_input = (selected or q.strip())
+
 if st.button("🚀 Recommend Similar Songs"):
-    with st.spinner("Finding similar songs..."):
-        if not selected:
-            st.warning("Please select a song.")
-        else:
-            df = recommend(selected, 5)
-            if df is None or df.empty:
-                st.warning("Sorry, song not found.")
-            else:
-                st.success("Top similar songs:")
-                st.table(df)
+    if not song_input:
+        st.warning("Please type a song title (or pick a suggestion).")
+    else:
+        with st.spinner("Finding similar songs…"):
+            try:
+                df = recommend(song_input, 5)
+                if df is None or df.empty:
+                    st.warning(f"Sorry, song '{song_input}' not found.")
+                else:
+                    st.success(f"Top similar songs for: {song_input}")
+                    st.table(df)
+            except requests.RequestException as e:
+                st.error(f"API error: {e}")
