@@ -1,0 +1,34 @@
+# MLflow experiment tracking
+mlruns/
+backend/mlruns/
+
+# Données et sauvegardes
+*.csv
+*.json
+*.db
+*.sqlite
+*.log
+*.tmp
+*.bak
+backend/data/backup/
+
+# Modèles
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.pt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+env/
+venv/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+.backend/
