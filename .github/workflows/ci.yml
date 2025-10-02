@@ -43,13 +43,6 @@ jobs:
       - name: Train (preprocess) with MLflow tracking
         run: python -m src.preprocess
 
-      - name: Smoke test import
-        run: |
-          python - << 'PY'
-          from src.recommendation import recommend_songs
-          print(recommend_songs("Yellow", top_n=3))
-          PY
-
       - name: Upload artefacts (models/)
         uses: actions/upload-artifact@v4
         with:
@@ -63,6 +56,14 @@ jobs:
           name: mlruns
           path: ${{ github.workspace }}/mlruns/
           if-no-files-found: ignore   # <- évite les erreurs si le dossier est vide/ignoré
+
+
+      - name: Smoke test import
+        run: |
+          python - << 'PY'
+          from src.recommendation import recommend_songs
+          print(recommend_songs("Yellow", top_n=3))
+          PY
 
   build_and_push_image:
     needs: train_and_test
