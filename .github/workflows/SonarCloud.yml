@@ -2,14 +2,14 @@ name: SonarCloud
 
 on:
   push:
-    branches: [ui-streamlit, music-reco, main]
+    branches: [main, music-reco, ui-streamlit, flow-branch]
     paths:
       - 'backend/**'
       - 'ui/**'
       - 'sonar-project.properties'
       - '.github/workflows/**'
   pull_request:
-    branches: [ui-streamlit, music-reco, main]
+    branches: [main, music-reco, ui-streamlit, flow-branch]
     paths:
       - 'backend/**'
       - 'ui/**'
