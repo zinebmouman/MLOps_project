@@ -1,0 +1,15 @@
+artifact_uri: file:///workspaces/MLOps_project/backend/mlruns/203418255355723849/d4e4745dfffe4c05a9474e70eff3355c/artifacts
+end_time: 1759368121137
+entry_point_name: ''
+experiment_id: '203418255355723849'
+lifecycle_stage: active
+run_id: d4e4745dfffe4c05a9474e70eff3355c
+run_name: preprocess-tfidf-cosine
+run_uuid: d4e4745dfffe4c05a9474e70eff3355c
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759368121122
+status: 4
+tags: []
+user_id: codespace
