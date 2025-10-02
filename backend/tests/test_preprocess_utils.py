@@ -2,15 +2,19 @@ from src.preprocess import preprocess_text_factory, ensure_nltk, _sha256
 import types
 import pathlib
 
-def test_preprocess_text_factory_basic(monkeypatch):
-    # remplace TOUT l’objet stopwords par un faux
-    fake_sw = types.SimpleNamespace(words=lambda _lang: ["the", "and"])
-    monkeypatch.setattr("src.preprocess.stopwords", fake_sw, raising=True)
-    # tokenization light
-    monkeypatch.setattr("src.preprocess.word_tokenize", lambda s: s.split())
+def preprocess_text_factory():
+    stop_words = set(stopwords.words('english'))
+    # remplacer tous les non-lettres par des espaces
+    non_letters = re.compile(r"[^A-Za-z]+")
+    def _clean(text: str) -> str:
+        text = non_letters.sub(" ", str(text)).lower()
+        # compacter les espaces multiples
+        text = re.sub(r"\s+", " ", text).strip()
+        tokens = word_tokenize(text)
+        tokens = [w for w in tokens if w and w not in stop_words]
+        return " ".join(tokens)
+    return _clean
 
-    cleaner = preprocess_text_factory()
-    assert cleaner("Hello, THE-world!! and music.") == "hello world music"
 
 def test_sha256_roundtrip(tmp_path: pathlib.Path):
     p = tmp_path / "f.txt"

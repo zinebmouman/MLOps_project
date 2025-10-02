@@ -1,0 +1,16 @@
+{
+  "trained_at": "2025-10-02T01:27:05Z",
+  "git_sha": "local",
+  "dataset_path": "/workspaces/MLOps_project/backend/data/spotify_millsongdata.csv",
+  "dataset_sha256": "60e5a9f36e6d3446ada8efd483e90e0f18710def96275f9d504484c8fa0f5f16",
+  "sample_size": 50,
+  "tfidf_max_features": 100,
+  "tfidf_shape": [
+    50,
+    100
+  ],
+  "cosine_sim_shape": [
+    50,
+    50
+  ]
+}
