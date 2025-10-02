@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, music-reco ]
+    branches: [ main, music-reco, ui-streamlit, flow-branch ]
     paths: [ 'src/**','api/**','requirements.txt','data/**','Dockerfile','.github/workflows/**' ]
   workflow_dispatch: {}
   schedule:
