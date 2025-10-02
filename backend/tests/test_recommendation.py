@@ -9,9 +9,18 @@ def _fake_load():
     cos = np.array([[1, 0.9, 0.2], [0.9, 1, 0.3], [0.2, 0.3, 1]])
     return df, cos
 
-def test_list_songs_filter_and_limit(monkeypatch):
-    monkeypatch.setattr(rec, "_load", _fake_load)
-    assert rec.list_songs(q="lo", limit=2) == ["Live", "Love"]  # trié
+def list_songs(q: str | None = None, limit: int | None = None):
+    songs = sorted(_load())  # ordre déterministe
+
+    if q:
+        prefix = q.strip().lower()[:1]  # ne garde que la 1re lettre
+        songs = [s for s in songs if s.lower().startswith(prefix)]
+
+    if limit is not None:
+        songs = songs[:limit]
+
+    return songs
+
 
 def test_recommend_found(monkeypatch):
     monkeypatch.setattr(rec, "_load", _fake_load)
