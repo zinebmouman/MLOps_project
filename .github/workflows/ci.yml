@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ flow-branch ]   # <- uniquement ta branche
+    branches: [ main, music-reco, ui-streamlit, flow-branch]   # <- uniquement ta branche
     paths:
       - 'backend/**'
       - 'ui/**'
