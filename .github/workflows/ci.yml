@@ -96,6 +96,13 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/music-api:latest-flow-branch
             ghcr.io/${{ github.repository_owner }}/music-api:${{ github.ref_name }}
             ghcr.io/${{ github.repository_owner }}/music-api:${{ github.sha }}
+      
+      - name: Download models
+        uses: actions/download-artifact@v4
+        with:
+          name: models
+          path: backend/models/
+
 
   build_and_push_ui:
     runs-on: ubuntu-latest
