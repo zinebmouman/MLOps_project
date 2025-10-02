@@ -1,10 +1,14 @@
 services:
   api:
-    image: ./backend
+    build: ./backend
     environment:
       - UI_ORIGIN=http://localhost:8501
+      - MLFLOW_TRACKING_URI=/app/mlruns  # Indique à MLflow où stocker les runs
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend/mlruns:/app/mlruns # Monte le dossier mlruns pour les expérimentations
+      - ./backend/data:/app/data  # Monte le dossier data pour les modèles
 
   ui:
     build:
@@ -16,3 +20,4 @@ services:
       - "8501:8501"
     depends_on:
       - api
+
