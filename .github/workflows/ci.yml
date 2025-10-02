@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ main, music-reco, ui-streamlit ]
+    branches: [ main, music-reco, ui-streamlit, flow-branch ]
     paths:
       - 'backend/**'
       - 'ui/**'
