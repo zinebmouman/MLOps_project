@@ -62,7 +62,7 @@ if __name__ == "__main__":
         logging.info("⬇️ Downloading dataset from %s", DATA_ENV)
         urllib.request.urlretrieve(DATA_ENV, DATA)
 
-    # Charger un échantillon raisonnable pour les builds rapides
+    
     df_full = pd.read_csv(DATA)
     df = df_full.sample(min(SAMPLE_SIZE, len(df_full)), random_state=42)
     logging.info("✅ Dataset loaded: %d rows (sample from %d)", len(df), len(df_full))
